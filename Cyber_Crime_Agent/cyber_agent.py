@@ -31,7 +31,6 @@ splitted_data = text_splitter.split_documents(documents)
 
 # embeddings = OpenAIEmbeddings(model = "text-embedding-3-large")
 
-
 embeddings = HuggingFaceEmbeddings(
     model_name="BAAI/bge-small-en-v1.5",
     encode_kwargs={"normalize_embeddings": True},
@@ -45,9 +44,6 @@ vector_store =  Chroma.from_documents(
     embedding = embeddings
 )
 
-
-
-#convert the data into text form
 
 
 
@@ -80,8 +76,7 @@ prompt = PromptTemplate.from_template("""
     Question: {query}
 
 """)
-
-
+  
 rag_chain = get_content | prompt | llm
 
 response = rag_chain.invoke("where is cyber crime office gilgit")

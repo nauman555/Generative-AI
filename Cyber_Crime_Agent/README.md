@@ -1,13 +1,33 @@
 # Cyber Crime Agent
 
-A retrieval-augmented question-answering agent for Pakistan cyber-crime laws and NCCIA information. The script loads the local knowledge base PDF, creates searchable document embeddings, retrieves relevant passages, and asks a Groq-hosted language model to answer a question from that context.
+This project builds a local retrieval-augmented generation (RAG) system for answering questions about Pakistan cyber-crime law and NCCIA-related information using documents stored in the repository.
+
+The code loads a PDF knowledge base, breaks it into searchable chunks, embeds those chunks with a sentence-transformer model, retrieves the most relevant passages for a query, and sends the context to a Groq-hosted language model to answer the question.
+
+## What the project does
+
+- Reads and splits legal knowledge from `data/NCCIA_Knowledge_Base.pdf`
+- Creates embeddings using `BAAI/bge-small-en-v1.5`
+- Stores vectors in memory or Chroma for similarity search
+- Uses a Groq LLM to answer based only on retrieved passages
+- Includes two versions of the pipeline:
+  - `cyber_agent.py` — a simpler direct RAG chain
+  - `Agentic_Cyber_Agent.py` — an agent with a `retriever_tool` that follows a stricter retrieval-first prompt
+
+## Project files
+
+- `cyber_agent.py` — basic RAG implementation using a prompt template
+- `Agentic_Cyber_Agent.py` — tool-based agent powered by LangChain and Groq
+- `requirements.txt` — project dependencies
+- `data/` — local PDF knowledge base files
+- `.env` — local environment secrets (not committed)
 
 ## Requirements
 
-- Python 3.10 or newer
+- Python 3.10+
 - A Groq API key
-- The knowledge base file at `data/NCCIA_Knowledge_Base.pdf`
-- Internet access on the first run to download the embedding model and call Groq
+- Local PDF files in `data/`
+- Internet access during the first run to download the embedding model and access Groq
 
 ## Setup
 
@@ -18,7 +38,7 @@ python -m venv myenv
 .\myenv\Scripts\Activate.ps1
 ```
 
-Install the dependencies:
+Install dependencies:
 
 ```powershell
 pip install -r requirements.txt
@@ -30,39 +50,67 @@ Create a `.env` file in the project root:
 GROQ_API_KEY=your_groq_api_key
 ```
 
-Do not commit `.env` or the `myenv/` directory. They are excluded by `.gitignore`.
+## Run the project
 
-## Run
+Run the simpler version:
 
 ```powershell
 python .\cyber_agent.py
 ```
 
-The first run may download the `BAAI/bge-small-en-v1.5` embedding model. The script then prints an answer for the query defined in `cyber_agent.py`.
+Run the agent-based version:
 
-## Change the question
+```powershell
+python .\Agentic_Cyber_Agent.py
+```
 
-Edit the final invocation in `cyber_agent.py`:
+The first execution may take time because the embedding model is downloaded automatically and the LLM call is made through Groq.
+
+## Customizing the query
+
+In `cyber_agent.py`, change the query string passed to the RAG chain:
 
 ```python
 response = rag_chain.invoke("where is cyber crime office gilgit")
 ```
 
-Replace the text with your question and run the script again.
+In `Agentic_Cyber_Agent.py`, change the `query` variable near the bottom:
 
-## Project Structure
-
-```text
-.
-├── cyber_agent.py
-├── requirements.txt
-├── data/
-│   ├── NCCIA_Knowledge_Base.pdf
-│   └── PECA.pdf
-├── .env                 # local secrets, not committed
-└── myenv/               # local virtual environment, not committed
+```python
+query = "someone has created a fake account on instagram using my pictures. what should i do and also NCCIA has blocked my account what should i do"
 ```
 
-## Notes
+## Architecture overview
 
-- Answers are grounded in the retrieved local PDF content and may be incomplete or incorrect. Verify important legal information with an appropriately qualified professional or official source.
+```text
+PDF files in data/
+        |
+        v
+PyPDFLoader + text splitting
+        |
+        v
+Embedding model (BAAI/bge-small-en-v1.5)
+        |
+        v
+Vector similarity search
+        |
+        v
+Groq LLM
+        |
+        v
+Grounded answer based on retrieved document context
+```
+
+## Important notes
+
+- The system is designed to answer based on the local knowledge base only.
+- It is intended for informational use and should not be treated as legal advice.
+- Critical legal or formal matters should be verified through official NCCIA, PECA, or qualified legal sources.
+- Local secrets and the virtual environment should not be committed to source control.
+
+## Example use cases
+
+- Asking about cybercrime reporting procedures
+- Looking up NCCIA office or enforcement information
+- Searching the stored legal material for complaint-related guidance
+- Understanding PECA/NCCIA references mentioned in the PDF documents
